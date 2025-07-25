@@ -23,11 +23,14 @@
                 alert('Please enter your Spotify Client ID.');
                 return;
             }
+            var state = generateRandomString(16);
+
             const authUrl = 'https://accounts.spotify.com/authorize?' + $.param({
                 client_id: clientId,
-                response_type: 'token',
+                response_type: 'code',
                 redirect_uri: redirectUri,
-                scope: scopes
+                scope: scopes,
+                state: state
             });
 
             window.location.href = authUrl;
