@@ -1,34 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Spotify Auth</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8" />
+    <title>Spotify Auth</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
+
 <body>
-  <label for="client-id-input">Spotify Client ID:</label>
-  <input type="text" id="client-id-input" placeholder="Enter your Client ID" />
-  <button id="spotify-login">Login with Spotify</button>
-  <script>
-    const redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
-    const scopes = 'user-read-playback-state user-read-currently-playing';
+    <label for="client-id-input">Spotify Client ID:</label>
+    <input type="text" id="client-id-input" placeholder="Enter your Client ID" />
+    <button id="spotify-login">Login with Spotify</button>
+    <script>
+        const redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
+        const scopes = 'user-read-playback-state user-read-currently-playing';
 
-    $('#spotify-login').on('click', function () {
-      const clientId = $('#client-id-input').val();
-      if (!clientId) {
-        alert('Please enter your Spotify Client ID.');
-        return;
-      }
-      const authUrl = 'https://accounts.spotify.com/authorize?' + $.param({
-        client_id: clientId,
-        response_type: 'token',
-        redirect_uri: redirectUri,
-        scope: scopes,
-        show_dialog: true
-      });
+        $('#spotify-login').on('click', function () {
+            const clientId = $('#client-id-input').val();
+            if (!clientId) {
+                alert('Please enter your Spotify Client ID.');
+                return;
+            }
+            var state = generateRandomString(16);
 
-      window.location.href = authUrl;
-    });
-  </script>
+            const authUrl = 'https://accounts.spotify.com/authorize?' + $.param({
+                client_id: clientId,
+                response_type: 'code',
+                redirect_uri: redirectUri,
+                scope: scopes,
+                state: state
+            });
+
+            window.location.href = authUrl;
+        });
+    </script>
 </body>
+
 </html>
