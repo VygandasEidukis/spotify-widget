@@ -12,7 +12,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
 
@@ -21,33 +23,47 @@
 <body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-blue-50">
     <div class="w-full max-w-md p-8 bg-white/90 rounded-2xl shadow-xl border border-gray-100 backdrop-blur-md">
         <div class="flex flex-col items-center mb-6">
-            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center mb-2 shadow-md">
-                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8"><circle cx="20" cy="20" r="20" fill="#1DB954"/><path d="M12 25c5-2 11-2 16 0" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M14 20c4-1.5 8-1.5 12 0" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M16 16c2.5-.5 5-.5 7.5 0" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <div
+                class="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center mb-2 shadow-md">
+                <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8">
+                    <circle cx="20" cy="20" r="20" fill="#1DB954" />
+                    <path d="M12 25c5-2 11-2 16 0" stroke="#fff" stroke-width="2.5" stroke-linecap="round" />
+                    <path d="M14 20c4-1.5 8-1.5 12 0" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+                    <path d="M16 16c2.5-.5 5-.5 7.5 0" stroke="#fff" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
             </div>
             <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Spotify Login</h1>
         </div>
         <div id="main-content">
-            <p id="authenticating-msg" class="text-gray-700 text-center mb-4 animate-pulse">Authenticating with Spotify…</p>
+            <p id="authenticating-msg" class="text-gray-700 text-center mb-4 animate-pulse">Authenticating with Spotify…
+            </p>
             <div id="success-container" style="display:none">
                 <div class="flex flex-col items-center mb-3">
                     <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mb-2">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
                     </div>
                     <p class="text-green-700 text-center text-lg font-semibold mb-1">Login succeeded!</p>
                 </div>
                 <div class="mb-2">
                     <label for="b64input" class="block text-gray-600 text-sm mb-1">Step 1: Copy your token data</label>
                     <div class="flex gap-2 mb-2">
-                        <input id="b64input" type="text" value="" readonly class="flex-1 px-2 py-1 border border-gray-300 rounded bg-gray-100 text-xs text-gray-800 select-all" />
-                        <button id="copy-btn" class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition">Copy</button>
+                        <input id="b64input" type="text" value="" readonly
+                            class="flex-1 px-2 py-1 border border-gray-300 rounded bg-gray-100 text-xs text-gray-800 select-all" />
+                        <button id="copy-btn"
+                            class="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition">Copy</button>
                     </div>
                 </div>
                 <div class="mb-2">
                     <label class="block text-gray-600 text-sm mb-1">Step 2: Paste it into the widget settings</label>
                 </div>
                 <details class="mb-2">
-                    <summary class="cursor-pointer text-xs text-gray-400 hover:text-gray-600">Show raw token details</summary>
-                    <pre id="json-output" class="bg-gray-100 rounded p-2 text-xs text-gray-700 overflow-x-auto mt-1"></pre>
+                    <summary class="cursor-pointer text-xs text-gray-400 hover:text-gray-600">Show raw token details
+                    </summary>
+                    <pre id="json-output"
+                        class="bg-gray-100 rounded p-2 text-xs text-gray-700 overflow-x-auto mt-1"></pre>
                 </details>
             </div>
             <div id="error-container" style="display:none">
@@ -58,8 +74,10 @@
                 </div>
                 <div id="error-extra"></div>
                 <details class="mb-2" id="error-details" style="display:none">
-                    <summary class="cursor-pointer text-xs text-gray-400 hover:text-gray-600">Show error details</summary>
-                    <pre id="error-json" class="bg-gray-100 rounded p-2 text-xs text-gray-700 overflow-x-auto mt-1"></pre>
+                    <summary class="cursor-pointer text-xs text-gray-400 hover:text-gray-600">Show error details
+                    </summary>
+                    <pre id="error-json"
+                        class="bg-gray-100 rounded p-2 text-xs text-gray-700 overflow-x-auto mt-1"></pre>
                 </details>
             </div>
         </div>
@@ -69,7 +87,7 @@
         var redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
 
         if (isLocalhost()) {
-            redirectUri = 'http://127.0.0.1:5500/callback.ht';
+            redirectUri = 'http://127.0.0.1:5500/callback.html';
         }
 
         function isLocalhost() {
@@ -115,27 +133,27 @@
             }
         };
 
-function showError(type, errorData) {
-    const config = ERROR_CONFIG[type] || ERROR_CONFIG[ERROR_TYPES.GENERIC];
-    document.body.className = `min-h-screen flex items-center justify-center bg-gradient-to-br ${ERROR_CONFIG.color}`;
-    // Hide all main UI except error
-    document.getElementById('success-container').style.display = 'none';
-    document.getElementById('authenticating-msg').style.display = 'none';
-    document.querySelector('.flex.flex-col.items-center.mb-6').style.display = 'none'; // hide logo and header
-    // Show error container
-    const errorContainer = document.getElementById('error-container');
-    errorContainer.style.display = '';
-    document.getElementById('error-icon').innerHTML = ERROR_CONFIG.icon;
-    document.getElementById('error-title').textContent = config.title;
-    document.getElementById('error-desc').textContent = config.desc;
-    document.getElementById('error-extra').innerHTML = config.extra || '';
-    if (ERROR_CONFIG.showDetails && errorData) {
-        document.getElementById('error-details').style.display = '';
-        document.getElementById('error-json').textContent = JSON.stringify(errorData, null, 2);
-    } else {
-        document.getElementById('error-details').style.display = 'none';
-    }
-}
+        function showError(type, errorData) {
+            const config = ERROR_CONFIG[type] || ERROR_CONFIG[ERROR_TYPES.GENERIC];
+            document.body.className = `min-h-screen flex items-center justify-center bg-gradient-to-br ${ERROR_CONFIG.color}`;
+            // Hide all main UI except error
+            document.getElementById('success-container').style.display = 'none';
+            document.getElementById('authenticating-msg').style.display = 'none';
+            document.querySelector('.flex.flex-col.items-center.mb-6').style.display = 'none'; // hide logo and header
+            // Show error container
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.style.display = '';
+            document.getElementById('error-icon').innerHTML = ERROR_CONFIG.icon;
+            document.getElementById('error-title').textContent = config.title;
+            document.getElementById('error-desc').textContent = config.desc;
+            document.getElementById('error-extra').innerHTML = config.extra || '';
+            if (ERROR_CONFIG.showDetails && errorData) {
+                document.getElementById('error-details').style.display = '';
+                document.getElementById('error-json').textContent = JSON.stringify(errorData, null, 2);
+            } else {
+                document.getElementById('error-details').style.display = 'none';
+            }
+        }
 
         async function exchangeCode(code, verifier, clientId) {
             const params = new URLSearchParams({
