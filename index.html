@@ -11,8 +11,17 @@
   <button id="login">Login with Spotify</button>
 
   <script>
-    const redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
+    var redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
     const scopes = 'user-read-playback-state user-read-currently-playing';
+
+    if (isLocalhost()) {
+      redirectUri = 'http://127.0.0.1:5500/callback.html';
+    }
+
+    function isLocalhost()
+    {
+        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';;
+    }
 
     function generateRandomString(length) {
       const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';

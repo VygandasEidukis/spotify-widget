@@ -1,54 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Spotify Callback</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Spotify Callback</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
+
 <body>
-  <p>Authenticating with Spotify…</p>
+    <p>Authenticating with Spotify…</p>
 
-  <script>
-    async function exchangeCode(code, verifier, clientId) {
-      const redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
+    <script>
+        var redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
 
-      const params = new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: redirectUri,
-        client_id: clientId,
-        code_verifier: verifier
-      });
+        if (isLocalhost()) {
+            redirectUri = 'http://127.0.0.1:5500/callback';
+        }
 
-      const resp = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString()
-      });
+        function isLocalhost() {
+            return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';;
+        }
 
-      const data = await resp.json();
-      if (data.access_token) {
-        localStorage.setItem('spotify_access_token', data.access_token);
-        document.body.innerHTML = `<p>✅ Login succeeded!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
-      } else {
-        document.body.innerHTML = `<p>❌ Error retrieving token</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
-      }
-    }
+        async function exchangeCode(code, verifier, clientId) {
 
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    const state = params.get('state');
-    const storedState = localStorage.getItem('spotify_auth_state');
-    const verifier = localStorage.getItem('spotify_code_verifier');
-    const clientId = localStorage.getItem('spotify_client_id');
+            const params = new URLSearchParams({
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: redirectUri,
+                client_id: clientId,
+                code_verifier: verifier
+            });
 
-    if (state !== storedState) {
-      document.body.innerHTML = '<p>❌ Invalid state; possible CSRF attack.</p>';
-    } else if (code && verifier && clientId) {
-      exchangeCode(code, verifier, clientId);
-    } else {
-      document.body.innerHTML = '<p>❌ Missing code, state, or verifier.</p>';
-    }
-  </script>
+            const resp = await fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            });
+
+            const data = await resp.json();
+            localStorage.clear();
+            if (data.access_token) {
+                const jsonStr = JSON.stringify(data);
+                const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+                document.body.innerHTML = `
+                    <p>✅ Login succeeded!</p>
+                    <label for="b64input">Base64 Encoded Token Data:</label><br>
+                    <input id="b64input" type="text" value="${base64}" readonly style="width:90%">
+                    <button id="copy-btn">Copy</button>
+                    <pre>${jsonStr}</pre>
+                `;
+                $('#copy-btn').on('click', function () {
+                    $('#b64input')[0].select();
+                    document.execCommand('copy');
+                });
+            } else {
+                document.body.innerHTML = `<p>❌ Error retrieving token</p><pre>${JSON.stringify(data)}</pre>`;
+            }
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+        const storedState = localStorage.getItem('spotify_auth_state');
+        const verifier = localStorage.getItem('spotify_code_verifier');
+        const clientId = localStorage.getItem('spotify_client_id');
+
+        if (state !== storedState) {
+            document.body.innerHTML = '<p>❌ Invalid state; possible CSRF attack.</p>';
+        } else if (code && verifier && clientId) {
+            exchangeCode(code, verifier, clientId);
+        } else {
+            document.body.innerHTML = '<p>❌ Missing code, state, or verifier.</p>';
+        }
+    </script>
 </body>
+
 </html>
