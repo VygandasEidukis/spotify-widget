@@ -17,6 +17,15 @@
         const redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
         const scopes = 'user-read-playback-state user-read-currently-playing';
 
+        function generateRandomString(length) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
         $('#spotify-login').on('click', function () {
             const clientId = $('#client-id-input').val();
             if (!clientId) {
@@ -24,6 +33,7 @@
                 return;
             }
             var state = generateRandomString(16);
+        
 
             const authUrl = 'https://accounts.spotify.com/authorize?' + $.param({
                 client_id: clientId,
