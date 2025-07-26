@@ -50,6 +50,18 @@
                     <pre id="json-output" class="bg-gray-100 rounded p-2 text-xs text-gray-700 overflow-x-auto mt-1"></pre>
                 </details>
             </div>
+            <div id="error-container" style="display:none">
+                <div class="flex flex-col items-center mb-6">
+                    <div id="error-icon"></div>
+                    <h1 id="error-title" class="text-2xl font-bold tracking-tight text-center"></h1>
+                    <p id="error-desc" class="text-sm mt-2 text-center"></p>
+                </div>
+                <div id="error-extra"></div>
+                <details class="mb-2" id="error-details" style="display:none">
+                    <summary class="cursor-pointer text-xs text-gray-400 hover:text-gray-600">Show error details</summary>
+                    <pre id="error-json" class="bg-gray-100 rounded p-2 text-xs text-gray-700 overflow-x-auto mt-1"></pre>
+                </details>
+            </div>
         </div>
     </div>
 
@@ -57,15 +69,75 @@
         var redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
 
         if (isLocalhost()) {
-            redirectUri = 'http://127.0.0.1:5500/callback.html';
+            redirectUri = 'http://127.0.0.1:5500/callback.ht';
         }
 
         function isLocalhost() {
             return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';;
         }
 
-        async function exchangeCode(code, verifier, clientId) {
+        const ERROR_TYPES = {
+            REDIRECT: 'redirect',
+            CSRF: 'csrf',
+            MISSING: 'missing',
+            GENERIC: 'generic'
+        };
+        const ERROR_CONFIG = {
+            icon: '<div class="w-14 h-14 rounded-full bg-gradient-to-br from-red-400 to-orange-400 flex items-center justify-center mb-2 shadow-md"><svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#fee2e2"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6m0-6l6 6" /></svg></div>',
+            color: 'from-red-50 via-white to-orange-50',
+            showDetails: true,
+            [ERROR_TYPES.REDIRECT]: {
+                title: 'Redirect URI Not Supported',
+                desc: 'Your Spotify app\'s redirect URI is not set correctly.',
+                extra: `<ol class="list-decimal pl-5 text-sm text-gray-700 mb-4">
+                      <li>Go to <a href="https://developer.spotify.com/dashboard/applications" target="_blank" class="underline text-blue-600">Spotify Developer Dashboard</a>.</li>
+                      <li>Select your app and click <b>Edit Settings</b>.</li>
+                      <li>Add this URI to <b>Redirect URIs</b>:
+                        <div class="bg-gray-100 rounded px-2 py-1 mt-1 font-mono text-xs break-all select-all">https://vygandaseidukis.github.io/spotify-widget/callback</div>
+                      </li>
+                      <li>Save your changes and try logging in again.</li>
+                    </ol>`
+            },
+            [ERROR_TYPES.CSRF]: {
+                title: 'Invalid state',
+                desc: 'Possible CSRF attack detected. Please restart the login process.',
+                extra: ''
+            },
+            [ERROR_TYPES.MISSING]: {
+                title: 'Missing information',
+                desc: 'Missing code, state, or verifier. Please restart the login process.',
+                extra: ''
+            },
+            [ERROR_TYPES.GENERIC]: {
+                title: 'Something went wrong',
+                desc: 'We couldn\'t retrieve your Spotify token. Please try again or contact us on Etsy and provide a screenshot.',
+                extra: ''
+            }
+        };
 
+function showError(type, errorData) {
+    const config = ERROR_CONFIG[type] || ERROR_CONFIG[ERROR_TYPES.GENERIC];
+    document.body.className = `min-h-screen flex items-center justify-center bg-gradient-to-br ${ERROR_CONFIG.color}`;
+    // Hide all main UI except error
+    document.getElementById('success-container').style.display = 'none';
+    document.getElementById('authenticating-msg').style.display = 'none';
+    document.querySelector('.flex.flex-col.items-center.mb-6').style.display = 'none'; // hide logo and header
+    // Show error container
+    const errorContainer = document.getElementById('error-container');
+    errorContainer.style.display = '';
+    document.getElementById('error-icon').innerHTML = ERROR_CONFIG.icon;
+    document.getElementById('error-title').textContent = config.title;
+    document.getElementById('error-desc').textContent = config.desc;
+    document.getElementById('error-extra').innerHTML = config.extra || '';
+    if (ERROR_CONFIG.showDetails && errorData) {
+        document.getElementById('error-details').style.display = '';
+        document.getElementById('error-json').textContent = JSON.stringify(errorData, null, 2);
+    } else {
+        document.getElementById('error-details').style.display = 'none';
+    }
+}
+
+        async function exchangeCode(code, verifier, clientId) {
             const params = new URLSearchParams({
                 grant_type: 'authorization_code',
                 code,
@@ -93,8 +165,14 @@
                     $('#b64input')[0].select();
                     document.execCommand('copy');
                 });
+            } else if (
+                data.error === 'invalid_grant' &&
+                data.error_description &&
+                data.error_description.toLowerCase().includes('invalid redirect uri')
+            ) {
+                showError(ERROR_TYPES.REDIRECT, data);
             } else {
-                document.body.innerHTML = `<p>❌ Error retrieving token</p><pre>${JSON.stringify(data)}</pre>`;
+                showError(ERROR_TYPES.GENERIC, data);
             }
         }
 
@@ -106,11 +184,11 @@
         const clientId = localStorage.getItem('spotify_client_id');
 
         if (state !== storedState) {
-            document.body.innerHTML = '<p>❌ Invalid state; possible CSRF attack.</p>';
+            showError(ERROR_TYPES.CSRF);
         } else if (code && verifier && clientId) {
             exchangeCode(code, verifier, clientId);
         } else {
-            document.body.innerHTML = '<p>❌ Missing code, state, or verifier.</p>';
+            showError(ERROR_TYPES.MISSING);
         }
     </script>
 </body>
