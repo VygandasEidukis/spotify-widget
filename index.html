@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Spotify Login (PKCE)</title>
+  <meta charset="UTF-8">
+  <title>Spotify Login with PKCE</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body>
   <label>Spotify Client ID:</label><br>
-  <input type="text" id="client-id" placeholder="Enter your Client ID"><br><br>
-
-  <button id="spotify-login">Login with Spotify</button>
+  <input type="text" id="client-id" placeholder="Paste your Client ID"><br><br>
+  <button id="login">Login with Spotify</button>
 
   <script>
     const redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback.html';
@@ -17,37 +16,37 @@
 
     function generateRandomString(length) {
       const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let text = '';
-      for (let i = 0; i < length; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-      }
-      return text;
+      const array = crypto.getRandomValues(new Uint8Array(length));
+      return Array.from(array).map(x => possible[x % possible.length]).join('');
     }
 
-    async function generateCodeChallenge(codeVerifier) {
-      const data = new TextEncoder().encode(codeVerifier);
-      const digest = await crypto.subtle.digest('SHA-256', data);
-      return btoa(String.fromCharCode(...new Uint8Array(digest)))
-        .replace(/=/g, '')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_');
+    async function sha256(buffer) {
+      return await crypto.subtle.digest('SHA-256', buffer);
     }
 
-    $('#spotify-login').on('click', async function () {
+    function base64urlEncode(buffer) {
+      return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+        .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    }
+
+    async function generateCodeChallenge(verifier) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(verifier);
+      const digest = await sha256(data);
+      return base64urlEncode(digest);
+    }
+
+    $('#login').on('click', async () => {
       const clientId = $('#client-id').val().trim();
-      if (!clientId) {
-        alert("Please enter your Spotify Client ID");
-        return;
-      }
+      if (!clientId) return alert('Please enter your Client ID');
 
       const codeVerifier = generateRandomString(64);
       const codeChallenge = await generateCodeChallenge(codeVerifier);
       const state = generateRandomString(16);
 
-      // Store for callback
-      localStorage.setItem('spotify_client_id', clientId);
       localStorage.setItem('spotify_code_verifier', codeVerifier);
       localStorage.setItem('spotify_auth_state', state);
+      localStorage.setItem('spotify_client_id', clientId);
 
       const params = new URLSearchParams({
         response_type: 'code',
