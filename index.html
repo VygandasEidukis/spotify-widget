@@ -1,51 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <title>Spotify Auth</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <meta charset="UTF-8" />
+  <title>Spotify Login (PKCE)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
-
 <body>
-    <label for="client-id-input">Spotify Client ID:</label>
-    <input type="text" id="client-id-input" placeholder="Enter your Client ID" />
-    <button id="spotify-login">Login with Spotify</button>
-    <script>
-        const redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback';
-        const scopes = 'user-read-playback-state user-read-currently-playing';
+  <label>Spotify Client ID:</label><br>
+  <input type="text" id="client-id" placeholder="Enter your Client ID"><br><br>
 
-        function generateRandomString(length) {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let result = '';
-            for (let i = 0; i < length; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
+  <button id="spotify-login">Login with Spotify</button>
 
-        $('#spotify-login').on('click', function () {
-            const clientId = $('#client-id-input').val();
-            if (!clientId) {
-                alert('Please enter your Spotify Client ID.');
-                return;
-            }
-            var state = generateRandomString(16);
-        
+  <script>
+    const redirectUri = 'https://vygandaseidukis.github.io/spotify-widget/callback.html';
+    const scopes = 'user-read-playback-state user-read-currently-playing';
 
-            const authUrl = 'https://accounts.spotify.com/authorize?' + $.param({
-                client_id: clientId,
-                response_type: 'code',
-                redirect_uri: redirectUri,
-                scope: scopes,
-                state: state
-            });
+    function generateRandomString(length) {
+      const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let text = '';
+      for (let i = 0; i < length; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+      }
+      return text;
+    }
 
-            window.location.href = authUrl;
-        });
-    </script>
+    async function generateCodeChallenge(codeVerifier) {
+      const data = new TextEncoder().encode(codeVerifier);
+      const digest = await crypto.subtle.digest('SHA-256', data);
+      return btoa(String.fromCharCode(...new Uint8Array(digest)))
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+    }
+
+    $('#spotify-login').on('click', async function () {
+      const clientId = $('#client-id').val().trim();
+      if (!clientId) {
+        alert("Please enter your Spotify Client ID");
+        return;
+      }
+
+      const codeVerifier = generateRandomString(64);
+      const codeChallenge = await generateCodeChallenge(codeVerifier);
+      const state = generateRandomString(16);
+
+      // Store for callback
+      localStorage.setItem('spotify_client_id', clientId);
+      localStorage.setItem('spotify_code_verifier', codeVerifier);
+      localStorage.setItem('spotify_auth_state', state);
+
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        scope: scopes,
+        redirect_uri: redirectUri,
+        state: state,
+        code_challenge_method: 'S256',
+        code_challenge: codeChallenge
+      });
+
+      window.location = 'https://accounts.spotify.com/authorize?' + params.toString();
+    });
+  </script>
 </body>
-
 </html>
