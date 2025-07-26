@@ -48,7 +48,7 @@
                     <p class="text-green-700 text-center text-lg font-semibold mb-1">Login succeeded!</p>
                 </div>
                 <div class="mb-2">
-                    <label for="b64input" class="block text-gray-600 text-sm mb-1">Step 1: Copy your token data</label>
+                    <label for="b64input" class="block text-gray-600 text-sm mb-1">Step 1: Copy your client id</label>
                     <div class="flex gap-2 mb-2">
                         <input id="b64input" type="text" value="" readonly
                             class="flex-1 px-2 py-1 border border-gray-300 rounded bg-gray-100 text-xs text-gray-800 select-all" />
@@ -185,14 +185,17 @@
             if (data.access_token) {
 
                 data.create_date = new Date().toISOString();
-                db.collection("tokens").doc(clientId).set(data);
+                try {
+                    await db.collection("tokens").doc(clientId).set(data);
+                } catch (e) {
+                    showError(ERROR_TYPES.GENERIC, { message: 'Failed to save token to database.', error: e });
+                    return;
+                }
 
-                const jsonStr = JSON.stringify(data);
-                const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
                 document.getElementById('authenticating-msg').style.display = 'none';
                 document.getElementById('success-container').style.display = '';
-                document.getElementById('b64input').value = base64;
-                document.getElementById('json-output').textContent = jsonStr;
+                document.getElementById('b64input').value = clientId;
+                document.getElementById('json-output').textContent = JSON.stringify(data);
                 $('#copy-btn').on('click', function () {
                     $('#b64input')[0].select();
                     document.execCommand('copy');
