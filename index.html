@@ -58,7 +58,9 @@
         code_challenge: codeChallenge
       });
 
-      window.location = 'https://accounts.spotify.com/authorize?' + params.toString();
+      const authUrl = new URL("https://accounts.spotify.com/authorize")
+      authUrl.search = new URLSearchParams(params).toString();
+      window.location.href = authUrl.toString();
     });
   </script>
 </body>
